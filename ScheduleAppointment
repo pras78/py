@@ -1,0 +1,444 @@
+import random
+import calendar
+import datetime
+from breezypythongui import EasyFrame
+from tkinter import *
+from functools import partial
+from datetime import datetime, timedelta
+from tkinter.font import Font 
+from tkinter import Canvas, FLAT
+
+def create_canvas(window, color):
+    return Canvas(window, highlightthickness=1, relief=FLAT, background=color)
+
+
+#Creating Datastructure to use to store the doctor information, timeslots and also later patient information
+
+class CreateList():
+    def __init__(self):
+       
+        today = datetime.now().date()
+#lists for doctors, each list is for each doctor.
+        global doc1List
+        doc1List = []
+
+        global doc2List
+        global doc3List
+        global doc4List
+        global doc5List
+        global doc6List
+        global doc7List
+        global doc8List
+        global doc9List
+        global doc10List
+
+       #list for storing appointments
+        global apptDocList
+        
+        apptDocList = []
+        
+       #Adding elements inside a list
+        for i in range(0, 7):
+            j = 8
+            for k in range(0, 9):
+                if(j < 12):
+                    element = str((today.strftime('%Y-%m-%d') + " " + (str(j) + " AM")))
+                    doc1List.append(element)
+                elif(j > 13):
+                     element = str((today.strftime('%Y-%m-%d') + " " + (str(j) + " PM")))
+                     doc1List.append(element)
+                j += 1
+
+            dayOfWeek = ((today).weekday())
+            if dayOfWeek <= 4:
+                today = today + timedelta(days=1)
+            elif dayOfWeek > 4:
+                if(dayOfWeek == 5):
+                    today = today + timedelta(days=2)
+                elif (dayOfWeek == 6):
+                    today = today + timedelta(days=1)
+
+       #Each of these lists are created for keeping the available time slots for every doctor
+        doc2List = doc1List.copy()
+        doc3List = doc1List.copy()
+        doc4List = doc1List.copy()
+        doc5List = doc1List.copy()
+        doc6List = doc1List.copy()
+        doc7List = doc1List.copy()
+        doc8List = doc1List.copy()
+        doc9List = doc1List.copy()
+        doc10List = doc1List.copy()
+
+        #Calls the main function for GUI and logic
+        DoctorOffice().mainloop()
+
+#This class contains the User interface for showing the appointments
+class ShowAppointments(EasyFrame):
+    def __init__(self):
+        EasyFrame.__init__(self, title="Appointments Scheduled",width=800, height=800)
+        self["background"]=DoctorOffice.COLOR
+
+        if(len(apptDocList) ==0):
+            self.canvas = self.addCanvas(row = 0, column = 0, columnspan=4 , width = 20,background = "#E8BBA7") 
+            noAppts=self.addLabel(text="No Appointments created for this week yet.", row=1, column=0, sticky="NESW", background="#E8BBA7")
+            font = Font(family = "Helvetica", size = 20,  slant = "italic")
+            noAppts["font"] = font
+            noAppts["foreground"] = "blue"
+        else:
+            import operator
+            sorted(apptDocList, key=operator.itemgetter(1)) 
+            self.canvas = self.addCanvas(row = 1, column = 0, rowspan=4 , width = 20,background = "#F7EEE1") 
+            labelN1=self.addLabel(text="Doctor", row=1, column=0, sticky="NEW",background = "#F7EEE1")
+            self.canvas=self.canvas = self.addCanvas(row = 1, column = 1, rowspan=4 , width = 20,background = "#F4F1E1") 
+            labelN2=self.addLabel(text="Patient name", row=1, column=1,sticky="NEW",background = "#F4F1E1")
+            self.canvas = self.addCanvas(row = 1, column = 2, rowspan=4 , width = 20,background = "#F7EEE1") 
+            labelN3=self.addLabel(text="Appt. Time", row=1, column=2,sticky="NEW",background = "#F7EEE1")
+            i=2
+
+            font = Font(family = "Georgia", size = 20)
+            labelN1["font"] = font
+            labelN1["foreground"] = "black"
+            font = Font(family = "Georgia", size = 20)
+            labelN2["font"] = font
+            labelN2["foreground"] = "black"
+            font = Font(family = "Georgia", size = 20)
+            labelN3["font"] = font
+            labelN3["foreground"] = "black"
+            
+            font = Font(family = "Bookman", size = 15)
+            for k in apptDocList:
+                na1=self.addLabel(text=k[2], row=i, column=0, rowspan=1,sticky="NEW",background = "#F7EEE1", font=font)
+                na2=self.addLabel(text=k[1], row=i, column=1, rowspan=1,sticky="NEW",background = "#F4F1E1",font=font)
+                na3=self.addLabel(text=k[0], row=i, column=2, rowspan=1,sticky="NEW",background = "#F7EEE1",font=font)
+                i+=1
+
+        self.addButton(text="Schedule Appointment", row=0, column=0, command=self.scheduleAppointment)
+                
+                
+    def scheduleAppointment(self):
+        self.destroy()
+        DoctorOffice().mainloop()
+        
+    
+#Building the Frame for the UI portion and logic
+class DoctorOffice(EasyFrame):
+    """Displays a greeting in a window"""
+  
+
+    COLOR = "#5A3BB1"
+
+    def __init__(self):
+        """Sets up the window and the label"""
+        
+        EasyFrame.__init__(self, title="Schedule Appointment", width=1200, height=800)
+        DoctorOffice.COLOR="#ADD3D8"
+        self["background"]=DoctorOffice.COLOR
+        
+
+        def enterprogram():
+            self.schedulePatient()
+            self.getPatientDetails()
+
+        enterprogram()
+    
+
+    def schedulePatient(self):
+        self.canvas = self.addCanvas(row = 1, column = 0,height=20, columnspan=3, background = "#BDCE96")
+        selectDoc=self.addLabel(text="Select Doctor", row=1, column=0,sticky="NSEW",columnspan=2,background = "#BDCE96")
+        self.canvas = self.addCanvas(row = 1, column = 2,  height=20,   columnspan=5,background = "#BDCE96")
+        
+        self.doctorGroup = self.addRadiobuttonGroup(row=1,column=2,columnspan=5)
+        self.doctorGroup.addRadiobutton(text="Dr. Jeff")
+        self.doctorGroup.addRadiobutton(text="Dr. Morris")
+        self.doctorGroup.addRadiobutton(text="Dr. Alison")
+        self.doctorGroup.addRadiobutton(text="Dr. Karen")
+        self.doctorGroup.addRadiobutton(text="Dr. Daniel")
+        self.doctorGroup.addRadiobutton(text="Dr. Carol")
+        self.doctorGroup.addRadiobutton(text="Dr. Tim")
+        self.doctorGroup.addRadiobutton(text="Dr. Pine")
+        self.doctorGroup.addRadiobutton(text="Dr. Lyon")
+        self.doctorGroup.addRadiobutton(text="Dr. Sarah")
+        message1 = self.addButton(text="Check Available Times", row=2, column=0, columnspan=2,
+                                        command=self.selectDoctor)
+
+        font = Font(family = "Helvetica", size = 20)
+        selectDoc["font"] = font
+        selectDoc["foreground"] = "black"
+        
+    def getPatientDetails(self):
+        self.canvas = self.addCanvas(row = 9, column = 0,  columnspan=7 ,width = 20,  height=30,background = "#6694A0") 
+        name=self.addLabel(text="Enter Patient's name", row=9, rowspan=1,
+                        column=0, sticky="NSEW", background = "#6694A0")
+        self.PatientName = self.addTextField(
+            text="", row=9,  column=1, width=25, rowspan=1, columnspan=2, sticky="EW")
+        self.addButton(text="Book Appointment", row=10, column=0,
+                       columnspan=2, command=self.scheduleAppointment)
+        self.addButton(text="See all appointments", row=0, column=0,
+                       columnspan=2, command=self.seeAppointments)
+
+        font = Font(family = "Helvetica", size = 20)
+        name["font"] = font
+        name["foreground"] = "black"
+
+    def seeAppointments(self):
+        self.destroy()
+        ShowAppointments().mainloop()                
+        
+
+    def scheduleAppointment(self):
+        schedulePatient = self.PatientName.getText()
+        try:
+             if(schedulePatient==''):
+                 raise Exception('Missing name')
+             else:
+                print(schedulePatient)
+                try:
+                    times = self.timeSel
+                    print("In final method"+str(times))
+                    if(doctorIndex == 'radiobutton'):
+                        for availTimes in doc1List:
+                            if(availTimes.find(times) == 0):
+                                apptDocList.append([times, schedulePatient,doctor])
+                                doc1List.remove(times)
+                                print(apptDocList)
+                    if(doctorIndex == 'radiobutton2'):
+                        for availTimes in doc2List:
+                            if(availTimes.find(times) == 0):
+                                apptDocList.append([times, schedulePatient,doctor])
+                                doc2List.remove(times)
+                                print(apptDocList)
+                    if(doctorIndex == 'radiobutton3'):
+                        for availTimes in doc3List:
+                            if(availTimes.find(times) == 0):
+                                apptDocList.append([times, schedulePatient,doctor])
+                                doc3List.remove(times)
+                                print(apptDocList)
+                    if(doctorIndex == 'radiobutton4'):
+                        for availTimes in doc4List:
+                            if(availTimes.find(times) == 0):
+                                apptDocList.append([times, schedulePatient,doctor])
+                                doc4List.remove(times)
+                                print(apptDocList)
+                    if(doctorIndex == 'radiobutton5'):
+                        for availTimes in doc5List:
+                            if(availTimes.find(times) == 0):
+                                apptDocList.append([times, schedulePatient,doctor])
+                                doc5List.remove(times)
+                                print(apptDocList)
+                    if(doctorIndex == 'radiobutton6'):
+                        for availTimes in doc6List:
+                            if(availTimes.find(times) == 0):
+                                apptDocList.append([times, schedulePatient,doctor])
+                                doc6List.remove(times)
+                                print(apptDocList)
+                    if(doctorIndex == 'radiobutton7'):
+                        for availTimes in doc7List:
+                            if(availTimes.find(times) == 0):
+                                apptDocList.append([times, schedulePatient,doctor])
+                                doc7List.remove(times)
+                                print(apptDocList)
+                    if(doctorIndex == 'radiobutton8'):
+                        for availTimes in doc8List:
+                            if(availTimes.find(times) == 0):
+                                apptDocList.append([times, schedulePatient,doctor])
+                                doc8List.remove(times)
+                                print(apptDocList)
+                    if(doctorIndex == 'radiobutton9'):
+                        for availTimes in doc9List:
+                            if(availTimes.find(times) == 0):
+                                apptDocList.append([times, schedulePatient,doctor])
+                                doc9List.remove(times)
+                                print(apptDocList)
+                    if(doctorIndex == 'radiobutton10'):
+                        for availTimes in doc10List:
+                            if(availTimes.find(times) == 0):
+                                apptDocList.append([times, schedulePatient,doctor])
+                                doc10List.remove(times)
+                                print(apptDocList)
+
+                    self.messageBox(title="SUCCESS!", message="Appointment scheduled." +
+                                    "\n"+ "Patient's name:  "+schedulePatient +
+                                    "\n" + "Doctor's name:   "+doctor+
+                                    "\n" + "Date & Time:   "+times)
+
+                    
+                    #Deleting the frame to create a new one for future instances.
+                    self.destroy()
+                    
+                    #Creating new frame
+                    DoctorOffice().mainloop()
+                    
+                except Exception as e:
+                         self.messageBox(title = "ERROR",  message = "Select Doctor and Time Slot for Appointment First!")
+        except Exception as e:
+            self.messageBox(title = "ERROR",  message = "Enter Patient's name")
+        
+        
+        
+    def selectDoctor(self):
+        """Display a message box with the order information."""
+        global doctor
+        global doctorIndex
+        message = "You selected: "
+        try:
+            message += self.doctorGroup.getSelectedButton()["text"]
+            self.messageBox(title="Doctor Selection",  message=message)
+            print(self.doctorGroup.getSelectedButton()["text"])
+            print("Trying to print index: " + str(self.doctorGroup.getSelectedButton()))
+            print(type(self.doctorGroup.getSelectedButton()))
+            doctor = str(self.doctorGroup.getSelectedButton()["text"])
+            stringVal = str(self.doctorGroup.getSelectedButton())
+            print(stringVal)
+            doctorIndex = (stringVal.split("radiobuttongroup.!")[1])
+            print(doctorIndex)
+            today = datetime.now().date()
+            self.canvas = self.addCanvas(row = 6, column = 0,  columnspan=7,rowspan = 1,  width = 20, height=10, background = "#B8E0BC") 
+            for i in range(0, 7):
+                self.dates=self.addButton(text=str(today), row=6,column=i,command=partial(self.change, i, today))
+                dayOfWeek = ((today).weekday())
+                if dayOfWeek <= 4:
+                    today = today + timedelta(days=1)
+                elif dayOfWeek > 4:
+                    print(today)
+                    if(dayOfWeek == 5):
+                        today = today + timedelta(days=2)
+                    elif (dayOfWeek == 6):
+                        today = today + timedelta(days=1)
+                        
+
+        except Exception as e:
+                 self.messageBox(title = "ERROR",  message = "Select Doctor First!")
+        return doctor
+
+
+    def change(self, n, today):    
+        print(n)
+        self.pickDoctor(today)
+       
+    def pickDoctor(self, today):
+        self.availableTimes(today)
+       
+    def bookDoctor(self, n, times):
+        self.timeSel = times
+
+    def availableTimes(self, today):
+        print("In available times:")
+        self.canvas = self.addCanvas(row = 7, column = 0,  columnspan=7,rowspan = 1,  width = 20, height=10, background = "#B8E0BC") 
+        if(doctorIndex == 'radiobutton'):
+            print(today)
+            i = 0
+            for times in doc1List:
+                if(times.find(str(today)) == 0):
+                    print(times)
+                    self.selTime=self.addButton(text=str(times),
+                                    command=partial(self.bookDoctor, i, times), column=i, row=7)
+                    
+                    i += 1
+                
+        if(doctorIndex == 'radiobutton2'):
+            print(today)
+            i = 0
+            for times in doc2List:
+                if(times.find(str(today)) == 0):
+                    print(times)
+                    self.selTime=self.addButton(text=str(times),
+                                    command=partial(self.bookDoctor, i, times), column=i, row=7)
+                    
+                    i += 1
+        if(doctorIndex == 'radiobutton3'):
+            print(today)
+            i = 0
+            for times in doc3List:
+                if(times.find(str(today)) == 0):
+                    print(times)
+                    self.selTime=self.addButton(text=str(times),
+                                    command=partial(self.bookDoctor, i, times), column=i, row=7)
+                    
+                    i += 1
+                    
+        if(doctorIndex == 'radiobutton4'):
+            print(today)
+            i = 0
+            for times in doc4List:
+                if(times.find(str(today)) == 0):
+                    print(times)
+                    self.selTime=self.addButton(text=str(times),
+                                    command=partial(self.bookDoctor, i, times), column=i, row=7)
+                    
+                    i += 1
+                    
+        if(doctorIndex == 'radiobutton5'):
+            print(today)
+            i = 0
+            for times in doc5List:
+                if(times.find(str(today)) == 0):
+                    print(times)
+                    self.selTime=self.addButton(text=str(times),
+                                    command=partial(self.bookDoctor, i, times), column=i, row=7)
+                    
+                    i += 1
+                    
+        if(doctorIndex == 'radiobutton6'):
+            print(today)
+            i = 0
+            for times in doc6List:
+                if(times.find(str(today)) == 0):
+                    print(times)
+                    self.selTime=self.addButton(text=str(times),
+                                    command=partial(self.bookDoctor, i, times), column=i, row=7)
+                    
+                    i += 1
+                    
+        if(doctorIndex == 'radiobutton7'):
+            print(today)
+            i = 0
+            for times in doc7List:
+                if(times.find(str(today)) == 0):
+                    print(times)
+                    self.selTime=self.addButton(text=str(times),
+                                    command=partial(self.bookDoctor, i, times), column=i, row=7)
+                    
+                    i += 1
+                    
+        if(doctorIndex == 'radiobutton8'):
+            print(today)
+            i = 0
+            for times in doc8List:
+                if(times.find(str(today)) == 0):
+                    print(times)
+                    self.selTime=self.addButton(text=str(times),
+                                    command=partial(self.bookDoctor, i, times), column=i, row=7)
+                    
+                    i += 1
+
+        if(doctorIndex == 'radiobutton9'):
+            print(today)
+            i = 0
+            for times in doc9List:
+                if(times.find(str(today)) == 0):
+                    print(times)
+                    self.selTime=self.addButton(text=str(times),
+                                    command=partial(self.bookDoctor, i, times), column=i, row=7)
+                    
+                    i += 1
+
+
+        if(doctorIndex == 'radiobutton10'):
+            print(today)
+            i = 0
+            for times in doc10List:
+                if(times.find(str(today)) == 0):
+                    print(times)
+                    self.selTime=self.addButton(text=str(times),
+                                    command=partial(self.bookDoctor, i, times), column=i, row=7)
+                    
+                    i += 1 
+
+
+def main():
+    print("calling main")
+    CreateList().mainloop()
+
+
+if __name__ == "__main__":
+    main()
